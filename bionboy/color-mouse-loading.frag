@@ -31,8 +31,9 @@ Polar polarFromCartesian(vec2 st) {
   return Polar(radius, theta, center);
 }
 
-float normalizeTheta(Polar p) {
-  return (p.theta / TAU) + 0.5;
+void normalizeTheta(inout Polar p) {
+  p.theta /= TAU;
+  p.theta += .5;
 }
 
 //  Function from Iñigo Quiles
@@ -54,8 +55,8 @@ void main() {
   float twist = -pow(polar.r * 6., .5) * 0.5;
   polar.theta += twist;
 
-  // normalize theta only after twisting
-  polar.theta = normalizeTheta(polar);
+  // normalize only after twisting
+  normalizeTheta(polar);
 
   // segment the rainbow
   polar.theta = floor(polar.theta * COLOR_DIVISIONS) / COLOR_DIVISIONS;
