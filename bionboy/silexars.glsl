@@ -11,12 +11,15 @@ precision mediump float;
 
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform vec2 u_mouse;
+
+#define TIME_SCALE 0.5
 
 void main() {
   vec2 res = u_resolution.xy;
   float t = u_time;
   vec3 color;
-  float len, z = t;
+  float len, z = t * TIME_SCALE;
 
   for (int i = 0; i < 3; i++) {
     vec2 st = gl_FragCoord.xy / res;
@@ -29,7 +32,7 @@ void main() {
     st.x *= res.x / res.y;
 
     // shift z for each color channel slightly
-    z += .07;
+    z += .07 + u_mouse.x / res.x;
 
     // IDK ???
     len = length(st);
