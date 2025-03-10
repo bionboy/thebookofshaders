@@ -94,6 +94,8 @@ void rectangleCenteredFloor(inout vec2 st, inout vec4 color) {
   paint(color, vec4(1.0, 1.0, 0.0, .3), pct);
 }
 
+// After Reading
+
 void rectangleResuable(in vec2 st, inout vec4 canvas, vec2 size, vec2 offset, float blur, vec4 color) {
   blur = max(blur, 0.000001);
 
@@ -108,8 +110,6 @@ void rectangleResuable(in vec2 st, inout vec4 canvas, vec2 size, vec2 offset, fl
 
   paint(canvas, color, pct);
 }
-
-// After Reading
 
 void paint(inout vec4 canvas, vec3 brush, float pct) {
   paint(canvas, vec4(brush, pct), pct);
