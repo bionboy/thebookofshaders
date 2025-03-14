@@ -7,26 +7,14 @@
 precision mediump float;
 #endif
 
+#include "../helpers/paint.glsl"
+
+#define CIRCLE_COLOR vec3(0.5843, 0.2745, 0.502)
+// #define CIRCLE_COLOR vec3(0.1804, 0.4314, 0.1412)
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-
-void paint(inout vec4 canvas, vec4 brush, float pct) {
-  if (pct <= 0.0) {
-    return;
-  }
-
-  pct *= brush.a;
-
-  if (length(canvas) > 0.0) {
-    canvas = vec4(mix(canvas.rgb, brush.rgb, pct), 1);
-  } else {
-    canvas += vec4(brush.rgb, pct);
-  }
-}
-void paint(inout vec4 canvas, vec3 brush, float pct) {
-  paint(canvas, vec4(brush, pct), pct);
-}
 
 /*
   Circle function created Before Reading this section in TBOS
@@ -35,7 +23,7 @@ void circleBR(in vec2 st, inout vec4 canvas, vec2 offset, float radius) {
   float d = distance(st, offset);
   float fromCenter = d / radius;
   // vec4 brush = vec4(0.2275, 0.1882, 0.7882, 1.0);
-  vec4 brush = vec4(vec3(0.5843, 0.2745, 0.502), pow(fromCenter, 4.));
+  vec4 brush = vec4(CIRCLE_COLOR, pow(fromCenter, 4.));
 
   if (d <= radius) {
     paint(canvas, brush, 1.0);
@@ -52,10 +40,9 @@ void bubble(in vec2 st, inout vec4 canvas, vec2 offset, float radius) {
 void circleAR(in vec2 st, inout vec4 canvas, vec2 offset, float radius) {
   float d = distance(st, offset);
   float fromCenter = d / radius;
-  vec4 brush = vec4(vec3(0.5843, 0.2745, 0.502), pow(fromCenter, 4.));
+  vec4 brush = vec4(CIRCLE_COLOR, pow(fromCenter, 4.));
   // vec4 brush = vec4(vec3(0.5843, 0.2745, 0.502), .1);
 
-  // canvas += brush * step(d, radius);
   // canvas += brush * step(d, radius);
   paint(canvas, brush, step(d, radius));
   // canvas.a = brush.a;
@@ -69,12 +56,27 @@ void circleAR(in vec2 st, inout vec4 canvas, vec2 offset, float radius) {
 */
 void lensFlare(in vec2 st, inout vec4 canvas, vec2 offset, float radius) {
   float d = distance(st, offset);
-  vec4 brush = vec4(vec3(0.5843, 0.2745, 0.502), 1.);
+  vec4 brush = vec4(CIRCLE_COLOR, 1.);
 
   canvas += brush * radius / d;
   // canvas += brush * d / radius;
 
   // TODO: make it have the line that lens flares have too
+}
+
+/*
+  Modified function from TBOS,
+  this function avoids using anything that depends on `sqrt`
+  ! NOTE: The radius isn't the same as the other functions, its way bigger for the same value...
+  ! Probably because this isn't the radius!!!!
+  I guess it depends on your reference, but this is confusing to me after writing the other code
+*/
+void circleEfficient(in vec2 st, inout vec4 canvas, in vec2 offset, in float radius) {
+  vec2 dist = st - offset;
+
+  float circle = 1. - smoothstep(radius - (radius * 0.01), radius + (radius * 0.01), dot(dist, dist) * 4.0);
+
+  paint(canvas, CIRCLE_COLOR, circle);
 }
 
 void main() {
@@ -87,9 +89,13 @@ void main() {
   bubble(st, canvas, vec2(.2, .75), .05);
 
   circleAR(st, canvas, vec2(.8, .8), .1);
-  lensFlare(st, canvas, vec2(.80, .25), .3);
+  lensFlare(st, canvas, vec2(.22, .22), .2 + cos(u_time * 1.) * .02);
 
-  // see `meta-balls.frag` for the metaBalls function
+  float rEff = .01;
+  circleEfficient(st, canvas, vec2(.8, .2), rEff);
+  circleEfficient(st, canvas, vec2(.76, .15), rEff);
+  circleEfficient(st, canvas, vec2(.84, .15), rEff);
+  lensFlare(st, canvas, vec2(.8, .17), .02);
 
   gl_FragColor = canvas;
 }

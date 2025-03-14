@@ -7,26 +7,11 @@
 precision mediump float;
 #endif
 
+#include "../helpers/paint.glsl"
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-
-void paint(inout vec4 canvas, vec4 brush, float pct) {
-  if (pct <= 0.0) {
-    return;
-  }
-
-  pct *= brush.a;
-
-  if (length(canvas) > 0.0) {
-    canvas = vec4(mix(canvas.rgb, brush.rgb, pct), 1);
-  } else {
-    canvas += vec4(brush.rgb, pct);
-  }
-}
-void paint(inout vec4 canvas, vec3 brush, float pct) {
-  paint(canvas, vec4(brush, pct), pct);
-}
 
 /*
   based on circleBR
@@ -50,6 +35,7 @@ void metaBall(in vec2 st, inout vec4 canvas, float funk, float radius, vec2 offs
   CAUTION: This will break the canvas for all the other drawings
 */
 void metaBalls(in vec2 st, inout vec4 canvas) {
+  vec2 mouse = u_mouse / u_resolution;
   vec4 metaCanvas = vec4(0, 0, 0, 1);
   float r, funk;
   r = .05;
@@ -63,10 +49,16 @@ void metaBalls(in vec2 st, inout vec4 canvas) {
 
   float wiggleFactor = .2;
 
-  metaBall(st, metaCanvas, funk, r, vec2(.5, .45 + sin(u_time) * wiggleFactor));
-  metaBall(st, metaCanvas, funk, r, vec2(.5, .55 + sin(u_time * 2.) * wiggleFactor));
-  metaBall(st, metaCanvas, funk, r, vec2(.5 + sin(u_time * 2.) * wiggleFactor, .5));
-  metaBall(st, metaCanvas, funk, r, vec2(.5 - sin(u_time + .5 * 2.) * wiggleFactor, .5));
+  float offsetX = .5;
+
+  metaBall(st, metaCanvas, funk, r, vec2(offsetX, .45 + sin(u_time) * wiggleFactor));
+  metaBall(st, metaCanvas, funk, r, vec2(offsetX, .55 + sin(u_time * 2.) * wiggleFactor));
+  metaBall(st, metaCanvas, funk, r, vec2(offsetX + sin(u_time * 2.) * wiggleFactor, .5));
+  metaBall(st, metaCanvas, funk, r, vec2(offsetX - sin(u_time + .5 * 2.) * wiggleFactor, .5));
+
+  if (mouse.x != 0. && mouse.y != 0.) {
+    metaBall(st, metaCanvas, funk, r + .025, vec2(mouse.x, mouse.y));
+  }
 
   // canvas += metaCanvas;
   // canvas *= metaCanvas;

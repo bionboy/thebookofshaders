@@ -2,12 +2,12 @@
 precision mediump float;
 #endif
 
+// I created this paint function during this exercise but moved it here for other files to use
+#include "../helpers/paint.glsl"
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-
-void paint(inout vec4 outColor, vec3 inColor, float pct);
-void paint(inout vec4 outColor, vec4 inColor, float pct);
 
 // Before Reading
 
@@ -109,24 +109,6 @@ void rectangleResuable(in vec2 st, inout vec4 canvas, vec2 size, vec2 offset, fl
   pct *= tr.x * tr.y;
 
   paint(canvas, color, pct);
-}
-
-void paint(inout vec4 canvas, vec3 brush, float pct) {
-  paint(canvas, vec4(brush, pct), pct);
-}
-
-void paint(inout vec4 canvas, vec4 brush, float pct) {
-  if (pct <= 0.0) {
-    return;
-  }
-
-  pct *= brush.a;
-
-  if (length(canvas) > 0.0) {
-    canvas = vec4(mix(canvas.rgb, brush.rgb, pct), 1);
-  } else {
-    canvas += vec4(brush.rgb, pct);
-  }
 }
 
 float timeWiggle(in float speed, in float amplitude, in float offset) {
