@@ -149,14 +149,24 @@ void crazyTime(inout vec2 st, inout vec4 canvas) {
   }
 }
 
+void animateCustomShape(inout vec2 st, inout vec4 canvas) {
+  vec2 steps[ANIMATE_STEPS_ARRAY_SIZE];
+  steps[0] = vec2(0, 1);
+  steps[2] = vec2(1, 1);
+  steps[1] = vec2(1, 0);
+  steps[3] = vec2(0, 0);
+  vec2 uv = animateCoordsViaSteps(st, canvas, steps, 4, u_time, vec4(1.0, 0.5647, 0.4431, 1.0));
+  paint(canvas, vec3(0.4745, 0.5765, 0.6863), min(box(uv, vec2(0.1)), 1.));
+}
 void main() {
   vec2 st = normalizeCoordinates(gl_FragCoord.xy, u_resolution);
   st = squareAspectRatio(st, u_resolution);
   vec4 canvas = vec4(0.0, 0.0, 0.0, 0.0);
 
-  // displayInQuadrants(st, canvas);
-  // displayOverlap(st, canvas);
+  displayInQuadrants(st, canvas);
+  displayOverlap(st, canvas);
   crazyTime(st, canvas);
+  animateCustomShape(st, canvas);
 
   gl_FragColor = canvas;
 }
