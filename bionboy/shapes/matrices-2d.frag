@@ -7,6 +7,8 @@
 precision mediump float;
 #endif
 
+#define PI 3.14159265358979323846
+
 #include "../helpers/viewport.glsl"
 #include "../helpers/paint.glsl"
 #include "../helpers/animateSteps.glsl"
@@ -19,7 +21,12 @@ float box(in vec2 _st, in vec2 _size) {
   _size = vec2(0.5) - _size * 0.5;
   vec2 uv = smoothstep(_size, _size + vec2(0.001), _st);
   uv *= smoothstep(_size, _size + vec2(0.001), vec2(1.0) - _st);
-  return uv.x * uv.y;
+  // return uv.x * uv.y;
+  return clamp(uv.x * uv.y, 0., 1.);
+}
+
+float box(in vec2 _st, in float _size) {
+  return box(_st, vec2(_size));
 }
 
 float cross(in vec2 _st, float _size) {
@@ -151,22 +158,49 @@ void crazyTime(inout vec2 st, inout vec4 canvas) {
 
 void animateCustomShape(inout vec2 st, inout vec4 canvas) {
   vec2 steps[ANIMATE_STEPS_ARRAY_SIZE];
-  steps[0] = vec2(0, 1);
+  steps[0] = vec2(0, 0);
+  steps[1] = vec2(0, 1);
   steps[2] = vec2(1, 1);
-  steps[1] = vec2(1, 0);
-  steps[3] = vec2(0, 0);
+  steps[3] = vec2(1, 0);
+  steps[4] = steps[0];
   vec2 uv = animateCoordsViaSteps(st, canvas, steps, 4, u_time, vec4(1.0, 0.5647, 0.4431, 1.0));
-  paint(canvas, vec3(0.4745, 0.5765, 0.6863), min(box(uv, vec2(0.1)), 1.));
+  paint(canvas, vec3(0.4745, 0.5765, 0.6863), box(uv, vec2(0.05, .2)));
 }
+
+void rotate(inout vec2 st, inout vec4 canvas) {
+  float angle = u_time * .5;
+  mat2 rotationMatrix = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+  st -= vec2(0.5);
+  st = rotationMatrix * st;
+  st += vec2(0.5);
+  paint(canvas, vec3(0.4745, 0.5765, 0.6863), box(st, vec2(0.1)));
+}
+
+void animateRotate(inout vec2 st, inout vec4 canvas, float time) {
+  vec3 steps[ANIMATE_STEPS_ARRAY_SIZE];
+  steps[0] = vec3(.3, .3, 0.);
+  steps[1] = vec3(.7, .6, PI / 4.);
+  steps[2] = vec3(.5, .9, PI);
+  steps[3] = vec3(.3, 1.2, 0);
+  steps[4] = vec3(.7, 1.5, -PI / 4.);
+  steps[5] = steps[0];
+
+  vec2 uv = animateCoordsViaSteps(st, canvas, steps, 5, time, vec4(1.0, 0.5647, 0.4431, 1.0));
+
+  paint(canvas, vec3(0.4745, 0.5765, 0.6863), box(uv, vec2(.5, .1)));
+}
+
 void main() {
   vec2 st = normalizeCoordinates(gl_FragCoord.xy, u_resolution);
   st = squareAspectRatio(st, u_resolution);
   vec4 canvas = vec4(0.0, 0.0, 0.0, 0.0);
 
-  displayInQuadrants(st, canvas);
-  displayOverlap(st, canvas);
-  crazyTime(st, canvas);
-  animateCustomShape(st, canvas);
+  // displayInQuadrants(st, canvas);
+  // displayOverlap(st, canvas);
+  // crazyTime(st, canvas);
+  // animateCustomShape(st, canvas);
+  // rotate(st, canvas);
+  animateRotate(st, canvas, u_time);
 
   gl_FragColor = canvas;
 }

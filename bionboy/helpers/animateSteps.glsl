@@ -18,7 +18,7 @@ float _cross(in vec2 _st, float _size) {
   return clamp(a, 0., 1.);
 }
 
-vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
+vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec3 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
   vec3 color = vec3(0.0);
 
   float txScale = .7;
@@ -31,18 +31,37 @@ vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_
   float modTime = mod(time, float(stepCount));
   float slide = smoothstep(0., 1., fract(modTime));
 
-  for (int i = 0; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
-    if (modTime < float(i + 1)) {
-      vec2 now = steps[i];
-      vec2 prev = i > 0 ? steps[i - 1] : vec2(0.0);
+  vec3 now, prev;
+  for (int i = 1; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
+    if (modTime < float(i + 0)) {
+      now = steps[i];
+      prev = steps[i - 1];
 
+      // translate
       vec2 txBetween = vec2(prev.x + slide * (now.x - prev.x), prev.y + slide * (now.y - prev.y));
       uv += txBetween * -txScale;
+
+      // rotate
+      uv -= vec2(0.5);
+      float angle = prev.z + slide * (now.z - prev.z);
+      mat2 rotationMatrix = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+      uv = rotationMatrix * uv;
+      uv += vec2(0.5);
       break;
+
     }
   }
 
   return uv;
+}
+
+vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
+  // TODO(25-03-16): is there a better way to convert to vec3? I did this while having no internet access
+  vec3 stepsMod[ANIMATE_STEPS_ARRAY_SIZE];
+  for (int i = 0; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
+    stepsMod[i] = vec3(steps[i].x, steps[i].y, 0);
+  }
+  return animateCoordsViaSteps(st, canvas, stepsMod, stepCount, time, brush);
 }
 
 void animateSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
@@ -58,20 +77,21 @@ void animateSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_STEPS_ARR
 
 void animateTriangle(inout vec2 st, inout vec4 canvas, float time) {
   vec2 steps[ANIMATE_STEPS_ARRAY_SIZE];
-  steps[0] = vec2(.5, 1);
-  steps[1] = vec2(1, 0);
-  steps[2] = vec2(0, 0);
+  steps[0] = vec2(0, 0);
+  steps[1] = vec2(.5, 1);
+  steps[2] = vec2(1, 0);
+  steps[3] = steps[0];
   animateSteps(st, canvas, steps, 3, time, vec4(0.6627, 0.8941, 0.0235, 1.0));
 }
 
 void animateSquare(inout vec2 st, inout vec4 canvas, float time) {
   vec2 steps[ANIMATE_STEPS_ARRAY_SIZE];
-  steps[0] = vec2(0, 1);
-  steps[1] = vec2(1, 1);
-  steps[2] = vec2(1, 0);
-  steps[3] = vec2(0, 0);
+  steps[0] = vec2(0, 0);
+  steps[1] = vec2(0, 1);
+  steps[2] = vec2(1, 1);
+  steps[3] = vec2(1, 0);
+  steps[4] = vec2(0, 0);
   animateSteps(st, canvas, steps, 4, time, vec4(1.0, 0.5647, 0.4431, 1.0));
-
 }
 
 void animateChaos(inout vec2 st, inout vec4 canvas, float time) {
