@@ -190,17 +190,32 @@ void animateRotate(inout vec2 st, inout vec4 canvas, float time) {
   paint(canvas, vec3(0.4745, 0.5765, 0.6863), box(uv, vec2(.5, .1)));
 }
 
+void animateScale(inout vec2 st, inout vec4 canvas, float time) {
+  vec4 steps[ANIMATE_STEPS_ARRAY_SIZE];
+  steps[0] = vec4(.3, .3, 0., 1.);
+  steps[1] = vec4(.7, .6, PI / 4., 2.);
+  steps[2] = vec4(.5, .9, PI, .1);
+  steps[3] = vec4(.3, 1.2, 0, .5);
+  steps[4] = vec4(.7, 1.5, -PI / 4., 1.);
+  steps[5] = steps[0];
+
+  vec2 uv = animateCoordsViaSteps(st, canvas, steps, 5, time, vec4(1.0, 0.5647, 0.4431, 1.0));
+
+  paint(canvas, vec3(0.4745, 0.5765, 0.6863), box(uv, vec2(.5, .1)));
+}
+
 void main() {
   vec2 st = normalizeCoordinates(gl_FragCoord.xy, u_resolution);
   st = squareAspectRatio(st, u_resolution);
   vec4 canvas = vec4(0.0, 0.0, 0.0, 0.0);
 
-  // displayInQuadrants(st, canvas);
+  displayInQuadrants(st, canvas);
   // displayOverlap(st, canvas);
   // crazyTime(st, canvas);
   // animateCustomShape(st, canvas);
   // rotate(st, canvas);
-  animateRotate(st, canvas, u_time);
+  // animateRotate(st, canvas, u_time);
+  animateScale(st, canvas, u_time);
 
   gl_FragColor = canvas;
 }

@@ -18,7 +18,7 @@ float _cross(in vec2 _st, float _size) {
   return clamp(a, 0., 1.);
 }
 
-vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec3 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
+vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec4 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
   vec3 color = vec3(0.0);
 
   float txScale = .7;
@@ -31,35 +31,57 @@ vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec3 steps[ANIMATE_
   float modTime = mod(time, float(stepCount));
   float slide = smoothstep(0., 1., fract(modTime));
 
-  vec3 now, prev;
+  vec4 now, prev;
   for (int i = 1; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
     if (modTime < float(i + 0)) {
       now = steps[i];
       prev = steps[i - 1];
 
+      // calculate transition between position, angle, and scale
+      vec4 tx = prev + slide * (now - prev);
+
+      // move coords to origin
+      uv -= vec2(0.5);
+
       // translate
-      vec2 txBetween = vec2(prev.x + slide * (now.x - prev.x), prev.y + slide * (now.y - prev.y));
-      uv += txBetween * -txScale;
+      uv += tx.xy * -txScale;
 
       // rotate
-      uv -= vec2(0.5);
-      float angle = prev.z + slide * (now.z - prev.z);
+      float angle = tx.z;
       mat2 rotationMatrix = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-      uv = rotationMatrix * uv;
-      uv += vec2(0.5);
-      break;
+      uv *= rotationMatrix;
 
+      // scale
+      float scale = 1. / tx.w;
+      mat2 scaleMat = mat2(scale, 0., 0., scale);
+      uv *= scaleMat;
+
+      // put coords back to center
+      uv += vec2(0.5);
+
+      break;
     }
   }
 
   return uv;
 }
 
+/* positions and angle override */
+vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec3 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
+  // TODO(25-03-16): is there a better way to convert to vec3? I did this while having no internet access
+  vec4 stepsMod[ANIMATE_STEPS_ARRAY_SIZE];
+  for (int i = 0; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
+    stepsMod[i] = vec4(steps[i].x, steps[i].y, steps[i].z, 1);
+  }
+  return animateCoordsViaSteps(st, canvas, stepsMod, stepCount, time, brush);
+}
+
+/* positions only override */
 vec2 animateCoordsViaSteps(inout vec2 st, inout vec4 canvas, vec2 steps[ANIMATE_STEPS_ARRAY_SIZE], int stepCount, float time, vec4 brush) {
   // TODO(25-03-16): is there a better way to convert to vec3? I did this while having no internet access
-  vec3 stepsMod[ANIMATE_STEPS_ARRAY_SIZE];
+  vec4 stepsMod[ANIMATE_STEPS_ARRAY_SIZE];
   for (int i = 0; i < ANIMATE_STEPS_ARRAY_SIZE; i++) {
-    stepsMod[i] = vec3(steps[i].x, steps[i].y, 0);
+    stepsMod[i] = vec4(steps[i].x, steps[i].y, 0, 1.);
   }
   return animateCoordsViaSteps(st, canvas, stepsMod, stepCount, time, brush);
 }
