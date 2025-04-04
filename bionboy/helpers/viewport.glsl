@@ -12,3 +12,8 @@ vec2 squareAspectRatio(in vec2 st, in vec2 resolution) {
   st.y *= resolution.y / ratio;
   return st;
 }
+
+vec2 squareAspectAndNormalize(in vec2 st, in vec2 resolution) {
+  st = normalizeCoordinates(st, resolution);
+  return squareAspectRatio(st, resolution);
+}
